@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Snake Game</title>
+<style>
+    canvas {
+        border: 1px solid black;
+        background-color: #f0f0f0;
+        display: block;
+        margin: 0 auto;
+    }
+    #restartButton {
+        display: block;
+        margin: 20px auto;
+        padding: 10px 20px;
+        font-size: 16px;
+        cursor: pointer;
+    }
+</style>
+</head>
+<body>
+<canvas id="gameCanvas" width="1080" height="1080"></canvas>
+<button id="restartButton">Restart Game</button>
+
+<script>
+    const canvas = document.getElementById("gameCanvas");
+    const ctx = canvas.getContext("2d");
+
+    const box = 40; // size of each grid square
+    let snake = [{ x: 9 * box, y: 10 * box }];
+    let food = generateFood();
+    let score = 0;
+    let speed = 200; // initial speed
+    let gameInterval;
+
+    document.addEventListener("keydown", direction);
+    document.getElementById("restartButton").addEventListener("click", restartGame);
+
+    let d = "RIGHT"; // default direction
+
+    function direction(event) {
+        if (event.keyCode === 37 && d !== "RIGHT") {
+            d = "LEFT";
+        } else if (event.keyCode === 38 && d !== "DOWN") {
+            d = "UP";
+        } else if (event.keyCode === 39 && d !== "LEFT") {
+            d = "RIGHT";
+        } else if (event.keyCode === 40 && d !== "UP") {
+            d = "DOWN";
+        }
+    }
+
+    function draw() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        // Draw snake
+        for (let i = 0; i < snake.length; i++) {
+            ctx.fillStyle = (i === 0) ? "green" : "white";
+            ctx.fillRect(snake[i].x, snake[i].y, box, box);
+
+            ctx.strokeStyle = "black";
+            ctx.strokeRect(snake[i].x, snake[i].y, box, box);
+        }
+
+        // Draw food
+        ctx.fillStyle = "red";
+        ctx.fillRect(food.x, food.y, box, box);
+
+        // Move snake
+        let snakeX = snake[0].x;
+        let snakeY = snake[0].y;
+
+        if (d === "LEFT") snakeX -= box;
+        if (d === "UP") snakeY -= box;
+        if (d === "RIGHT") snakeX += box;
+        if (d === "DOWN") snakeY += box;
+
+        // Check if snake eats food
+        if (snakeX === food.x && snakeY === food.y) {
+            score++;
+            food = generateFood();
+            clearInterval(gameInterval); // Reset interval
+            speed -= 10; // Increase speed slightly
+            gameInterval = setInterval(draw, speed);
+        } else {
+            snake.pop();
+        }
+
+        // Create new head
+        let newHead = {
+            x: snakeX,
+            y: snakeY
+        };
+
+        // Game over conditions
+        if (
+            snakeX < 0 ||
+            snakeX >= canvas.width ||
+            snakeY < 0 ||
+            snakeY >= canvas.height
+        ) {
+            clearInterval(gameInterval);
+            alert("Game Over! Your score: " + score);
+            restartGame();
+        } else if (collision(newHead, snake)) {
+            clearInterval(gameInterval);
+            alert("Game Over! Your score: " + score);
+            restartGame();
+        }
+
+        snake.unshift(newHead);
+
+        // Display score
+        ctx.fillStyle = "black";
+        ctx.font = "30px Arial";
+        ctx.fillText("Score: " + score, 10, 30);
+    }
+
+    function restartGame() {
+        snake = [{ x: 9 * box, y: 10 * box }];
+        food = generateFood();
+        score = 0;
+        speed = 200;
+        clearInterval(gameInterval);
+        gameInterval = setInterval(draw, speed);
+    }
+
+    gameInterval = setInterval(draw, speed);
+
+    function collision(head, array) {
+        for (let i = 0; i < array.length; i++) {
+            if (head.x === array[i].x && head.y === array[i].y) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    function generateFood() {
+        return {
+            x: Math.floor(Math.random() * 27) * box,
+            y: Math.floor(Math.random() * 27) * box
+        };
+    }
+</script>
+
+</body>
+</html>
+
+
